@@ -1,0 +1,31 @@
+html, body {
+  background: black;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  background: black;
+  color: white;
+  display: flex;
+  margin: 0;
+}
+
+.container {
+  align-items: center;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding-top: 25%;
+}
+
+#auth-button {
+  background: aliceblue;
+  border: none;
+  border-radius: 8px;
+  color: black;
+  cursor: pointer;
+  font-size: x-large;
+  padding: 25px;
+}
