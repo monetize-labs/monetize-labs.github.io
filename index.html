@@ -1,14 +1,114 @@
-<!DOCTYPE html>
 <html>
-  <head>
-    <script src="polywallet.js"></script>
-    <link rel="stylesheet" type="text/css" href="example.css">
-  </head>
-  <body>
-    <div class="container">
-      <button id="auth-button">Authenticate</button>
-      <h2 id="paymail"></h2>
-      <script src="example.js"></script>
-    </div>
-  </body>
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1">
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@forevolve/bootstrap-dark@1.0.0/dist/css/toggle-bootstrap.min.css" />
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@forevolve/bootstrap-dark@1.0.0/dist/css/toggle-bootstrap-dark.min.css" />
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@forevolve/bootstrap-dark@1.0.0/dist/css/toggle-bootstrap-print.min.css" />
+		<style>
+			#spinner{
+				display: none;
+			}
+			#result{
+				display: none;
+			}
+		</style>
+	</head>
+	<body class="bootstrap-dark">
+		<div class="container text-center mt-5" style="max-width: 300px;">
+			<textarea class="form-control mt-3 mb-3" id="dataPlace" name="signable_data" >I love polywallet!</textarea>
+			<button type="button" id="authButton" class="btn btn-outline-primary mt-3 mb-3"> 🔥 Sign Message! 🔥</button>
+
+			<div id="spinner">
+				<div class="spinner-border text-primary" role="status">
+					<span class="sr-only">Loading...</span>
+				  </div>
+			</div>
+			<div class="container text-center" id="result">
+				<div class="row mt-3 pb-2 border-bottom border-secondary">
+					<div class="col text-left text-primary">Paymail:</div>
+					<div class="col" id="paymailPlace"></div>
+				</div>
+				<div class="row mt-3 pb-2 border-bottom border-secondary">
+					<div class="col text-left text-primary">PublicKey:</div>
+					<div class="col text-break" id="pubKeyPlace"></div>
+				</div>
+				<div class="row mt-3 pb-2 border-bottom border-secondary">
+					<div class="col text-left text-primary">Message:</div>
+					<div class="col text-break" id="messagePlace"></div>
+				</div>
+				<div class="row mt-3 pb-2 border-bottom border-secondary">
+					<div class="col text-left text-primary">Base64-Decoded Message:</div>
+					<div class="col text-break" id="decodedMessagePlace"></div>
+				</div>
+				<div class="row mt-3 pb-2 border-bottom border-secondary">
+					<div class="col text-left text-primary">Signature:</div>
+					<div class="col text-break" id="signaturePlace"></div>
+				</div>
+			</div>
+		<script src="https://unpkg.com/@polywallet/bundle@0.1.0/dist/polywallet.js"></script>
+		<script>
+			async function setupWallet() {
+				window.wallet = await new Polywallet.WalletBuilder()
+					.with(Polywallet.HandCashWallet, {
+						appId: '62f34b25aae53a02314625d9',
+						appSecret: '554f776677ef6a53c277cca07620300c4860c9a0f86c6b978be97e67017a5fa9'
+					})
+					.with(Polywallet.TwetchWallet)
+					.with(Polywallet.SensiletWallet)
+					.with(Polywallet.MoneyButtonWallet, {clientIdentifier: 'b4e7b0d69cc7ce0a2a2f34aa83784666'})
+					.with(Polywallet.RelayXWallet, { bitcomPrefix: '14Un3n1Ri3Yuz47XPSKFcgtBvqZm7X5gDs' })
+					.withModal(Polywallet.PolywalletModal, {
+						mode: 'STANDARD',
+						theme: 'DARK',
+						afterClosed: () => console.log('Modal is closed!'),
+					})
+					.forceShow(false)
+					.build()
+
+				if (window.wallet) {
+					const data = document.getElementById('dataPlace').value
+					spinner(true)
+					result(false)
+					const [paymail, publicKey, signedData] = await Promise.all([
+						window.wallet.getPaymail(),
+						window.wallet.getPublicKey(),
+						window.wallet.sign(new TextEncoder().encode(data))
+					])
+					spinner(false)
+					result(true)
+
+					document.getElementById('pubKeyPlace').innerText = Array.from(publicKey).map(i2hex).join('');
+					document.getElementById('paymailPlace').innerText = `${paymail}`
+					document.getElementById('messagePlace').innerText = `"${new TextDecoder().decode(signedData.data)}"`
+					document.getElementById('decodedMessagePlace').innerText = `"${atob(new TextDecoder().decode(signedData.data))}"`
+					document.getElementById('signaturePlace').innerText = `${btoa(String.fromCharCode.apply(null, signedData.signature))}`
+				}
+			}
+			authButton.ontouchend = async () => {
+				setupWallet()
+			}
+
+			authButton.onclick = async () => {
+				setupWallet()
+			}
+			function i2hex(i) {
+				return ('0' + i.toString(16)).slice(-2);
+			}
+
+			function spinner(enabled) {
+				if (enabled) {
+					document.getElementById('spinner').style.display = 'block'
+				} else {
+					document.getElementById('spinner').style.display = 'none'
+				}
+			}
+			function result(enabled) {
+				if (enabled) {
+					document.getElementById('result').style.display = 'block'
+				} else {
+					document.getElementById('result').style.display = 'none'
+				}
+			}
+		</script>
+	</body>
 </html>
